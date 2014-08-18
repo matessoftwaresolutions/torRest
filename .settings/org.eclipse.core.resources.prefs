@@ -1,0 +1,4 @@
+eclipse.preferences.version=1
+encoding//tests/test_trh.py=utf-8
+encoding//tornado_rest_handler/motorengine.py=utf-8
+encoding//tornado_rest_handler/trh.py=utf-8
