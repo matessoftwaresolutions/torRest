@@ -1,10 +1,10 @@
 # coding: utf-8
+from json.decoder import JSONDecoder
 from python_rest_handler.data_managers.mongoengine import MongoEngineDataManager
 from python_rest_handler.prh import RestRequestHandler
 from tornado.web import RequestHandler
 import python_rest_handler
 import tornado.web
- 
 
 
 class TornadoRestHandler(RequestHandler, RestRequestHandler):
@@ -33,11 +33,20 @@ class TornadoRestHandler(RequestHandler, RestRequestHandler):
         return self.request.uri
 
     def get_request_data(self):
+        # JSON Requests
         data = {}
-        for arg in list(self.request.arguments.keys()):
-            data[arg] = self.get_argument(arg)
-            if data[arg] == '':  # Tornado 3.0+ compatibility
-                data[arg] = None
+        content_type = self.request.headers.get("Content-Type", "")
+        if content_type.startswith("application/json"):
+            try:
+                request = self.request.body.decode()
+                data = JSONDecoder().decode(request or '{}')
+            except ValueError:
+                data = {}
+        else:
+            for arg in list(self.request.arguments.keys()):
+                data[arg] = self.get_argument(arg)
+                if data[arg] == '':  # Tornado 3.0+ compatibility
+                    data[arg] = None
         return data
 
     def render(self, template_name, **kwargs):
@@ -46,8 +55,11 @@ class TornadoRestHandler(RequestHandler, RestRequestHandler):
     def redirect(self, url, permanent=False, status=None, **kwargs):
         return super(TornadoRestHandler, self).redirect(url, permanent=permanent, status=status)
 
-
-
+    def get_current_user(self):
+        return super().get_current_user()
+    
+    def is_authorized(self, action='', instance_id=None, instance=None, query_filters={}, **kwargs):
+        return True
 
 def routes(route_list):
     return python_rest_handler.routes(route_list)
