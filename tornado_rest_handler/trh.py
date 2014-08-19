@@ -1,5 +1,4 @@
 # coding: utf-8
-from json.decoder import JSONDecoder
 from python_rest_handler.data_managers.mongoengine import MongoEngineDataManager
 from python_rest_handler.prh import RestRequestHandler
 from tornado.web import RequestHandler
@@ -8,11 +7,11 @@ import tornado.web
 
 
 class TornadoRestHandler(RequestHandler, RestRequestHandler):
-    def get(self, instance_id=None, edit=False):
-        return self.rest_handler._get(instance_id=instance_id, edit=edit)
+    def get(self, instance_id=None):
+        return self.rest_handler._get(instance_id=instance_id)
 
-    def post(self, instance_id=None, action=None):
-        return self.rest_handler._post(instance_id=instance_id, action=action)
+    def post(self, instance_id=None):
+        return self.rest_handler._post(instance_id=instance_id)
 
     def put(self, instance_id):
         return self.rest_handler._put(instance_id=instance_id)
@@ -33,33 +32,28 @@ class TornadoRestHandler(RequestHandler, RestRequestHandler):
         return self.request.uri
 
     def get_request_data(self):
-        # JSON Requests
         data = {}
-        content_type = self.request.headers.get("Content-Type", "")
-        if content_type.startswith("application/json"):
-            try:
-                request = self.request.body.decode()
-                data = JSONDecoder().decode(request or '{}')
-            except ValueError:
-                data = {}
-        else:
-            for arg in list(self.request.arguments.keys()):
-                data[arg] = self.get_argument(arg)
-                if data[arg] == '':  # Tornado 3.0+ compatibility
-                    data[arg] = None
+        for arg in list(self.request.arguments.keys()):
+            data[arg] = self.get_argument(arg)
+            if data[arg] == '':  # Tornado 3.0+ compatibility
+                data[arg] = None
         return data
 
     def render(self, template_name, **kwargs):
         return super(TornadoRestHandler, self).render(template_name, **kwargs)
-
+ 
     def redirect(self, url, permanent=False, status=None, **kwargs):
         return super(TornadoRestHandler, self).redirect(url, permanent=permanent, status=status)
 
+    # Access Control
     def get_current_user(self):
         return super().get_current_user()
     
     def is_authorized(self, action='', instance_id=None, instance=None, query_filters={}, **kwargs):
         return True
+    
+    def get_access_control_filters(self): 
+        return {}
 
 def routes(route_list):
     return python_rest_handler.routes(route_list)

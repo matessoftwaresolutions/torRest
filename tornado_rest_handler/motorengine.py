@@ -1,29 +1,44 @@
 # coding: utf-8
 from python_rest_handler import DataManager
-
+from tornado import gen
 
 class MotorEngineDataManager(DataManager):
-    def instance_list(self):
-        return self.model.objects.find_all()
+    @gen.coroutine
+    def instance_list(self, query_filters={}, access_control_filters={}):
+        query_set = self.model.objects
+        
+        if query_filters:
+            query_set = query_set.filter(**query_filters)
+        if access_control_filters:
+            query_set = query_set.filter(**access_control_filters)
+            
+        instance_list = yield query_set.find_all()
+        return instance_list
 
+    @gen.coroutine
     def find_instance_by_id(self, instance_id):
         try:
-            return self.instance_list().get(pk=instance_id)
+            instance = self.instance_list().get(pk=instance_id)
+            instance._id = instance_id
+            return instance
+        
         except self.model.DoesNotExist:
             self.handler.raise_error(404)
 
+    @gen.coroutine
     def save_instance(self, data):
         instance = self.model(**data)
-        instance.save()
+        yield instance.save()
         return instance
 
+    @gen.coroutine
     def update_instance(self, instance, data):
-        update_query = {}
         for key, value in data.items():
-            update_query['set__%s' % key] = value
+            setattr(instance, key, value)
 
-        instance.update(**update_query)
+        yield instance.save()
         return instance
 
+    @gen.coroutine
     def delete_instance(self, instance):
-        instance.delete()
+        yield instance.delete()
