@@ -2,7 +2,16 @@
 from python_rest_handler import DataManager
 from tornado import gen
 
+class Yield(Exception):
+    def __init__(self, future, callback):
+        self.future = future
+        self.callback = callback
+
+    def resume(self):
+        self.callback(self.future)
+
 class MotorEngineDataManager(DataManager):
+    __asynchronous__ = True
     @gen.coroutine
     def instance_list(self, query_filters={}, access_control_filters={}):
         query_set = self.model.objects
@@ -12,9 +21,9 @@ class MotorEngineDataManager(DataManager):
         if access_control_filters:
             query_set = query_set.filter(**access_control_filters)
             
-        instance_list = yield query_set.find_all()
-        return instance_list
-
+        results = yield query_set.find_all()
+        return results
+    
     @gen.coroutine
     def find_instance_by_id(self, instance_id):
         try:

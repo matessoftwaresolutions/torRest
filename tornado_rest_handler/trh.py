@@ -1,23 +1,42 @@
 # coding: utf-8
 from python_rest_handler.data_managers.mongoengine import MongoEngineDataManager
 from python_rest_handler.prh import RestRequestHandler
+from tornado import gen
 from tornado.web import RequestHandler
+from tornado_rest_handler.motorengine import Yield
 import python_rest_handler
 import tornado.web
 
 
 class TornadoRestHandler(RequestHandler, RestRequestHandler):
+    @gen.coroutine
     def get(self, instance_id=None):
-        return self.rest_handler._get(instance_id=instance_id)
+        if hasattr(self, "rest_handler"):
+            return self.rest_handler._get(instance_id=instance_id)
+        else:
+            super().get()
+            
 
+    @gen.coroutine
     def post(self, instance_id=None):
-        return self.rest_handler._post(instance_id=instance_id)
+        if hasattr(self, "rest_handler"):
+            return self.rest_handler._post(instance_id=instance_id)
+        else:
+            super().post()
 
+    @gen.coroutine
     def put(self, instance_id):
-        return self.rest_handler._put(instance_id=instance_id)
-
+        if hasattr(self, "rest_handler"):
+            return self.rest_handler._put(instance_id=instance_id)
+        else:
+            super().put()
+    
+    @gen.coroutine
     def delete(self, instance_id):
-        return self.rest_handler._delete(instance_id=instance_id)
+        if hasattr(self, "rest_handler"):
+            return self.rest_handler._delete(instance_id=instance_id)
+        else:
+            super().delete()
 
 
     def raise_error(self, code):
@@ -39,15 +58,13 @@ class TornadoRestHandler(RequestHandler, RestRequestHandler):
                 data[arg] = None
         return data
 
-    def render(self, template_name, **kwargs):
-        return super(TornadoRestHandler, self).render(template_name, **kwargs)
- 
     def redirect(self, url, permanent=False, status=None, **kwargs):
-        return super(TornadoRestHandler, self).redirect(url, permanent=permanent, status=status)
+        return super().redirect(url, permanent=permanent, status=status)
+    
 
     # Access Control
     def get_current_user(self):
-        return super().get_current_user()
+        return None
     
     def is_authorized(self, action='', instance_id=None, instance=None, query_filters={}, **kwargs):
         return True
@@ -55,17 +72,6 @@ class TornadoRestHandler(RequestHandler, RestRequestHandler):
     def get_access_control_filters(self): 
         return {}
 
-def routes(route_list):
-    return python_rest_handler.routes(route_list)
-
-
 def rest_routes(model, data_manager=MongoEngineDataManager, base_handler_type=TornadoRestHandler, **kwargs):
     return python_rest_handler.rest_routes(model, data_manager, base_handler_type, **kwargs)
 
-
-def activate_plugin(name):
-    return python_rest_handler.activate_plugin(name)
-
-
-def deactivate_plugin(name):
-    return python_rest_handler.deactivate_plugin(name)
