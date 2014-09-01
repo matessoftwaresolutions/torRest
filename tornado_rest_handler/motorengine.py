@@ -1,25 +1,15 @@
 # coding: utf-8
 from python_rest_handler import DataManager
 from tornado import gen
-
-class Yield(Exception):
-    def __init__(self, future, callback):
-        self.future = future
-        self.callback = callback
-
-    def resume(self):
-        self.callback(self.future)
-
+ 
 class MotorEngineDataManager(DataManager):
-    __asynchronous__ = True
+    
     @gen.coroutine
-    def instance_list(self, query_filters={}, access_control_filters={}):
+    def instance_list(self, query_filters={}):
         query_set = self.model.objects
         
         if query_filters:
             query_set = query_set.filter(**query_filters)
-        if access_control_filters:
-            query_set = query_set.filter(**access_control_filters)
             
         results = yield query_set.find_all()
         return results
@@ -27,10 +17,10 @@ class MotorEngineDataManager(DataManager):
     @gen.coroutine
     def find_instance_by_id(self, instance_id):
         try:
-            instance = self.instance_list().get(pk=instance_id)
-            instance._id = instance_id
+            instance = yield self.model.objects.get(instance_id)
             return instance
-        
+        except Exception as e:
+            print(e)
         except self.model.DoesNotExist:
             self.handler.raise_error(404)
 

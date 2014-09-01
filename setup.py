@@ -1,4 +1,4 @@
-#from distutils.core import setup
+# from distutils.core import setup
 from setuptools import setup, find_packages
 
 VERSION = open('VERSION', 'r').read().strip()
@@ -15,14 +15,14 @@ install_requires = [
 ]
 
 setup(name='%s' % PROJECT_NAME,
-      url='https://github.com/paulocheque/%s' % PROJECT_NAME,
-      author="paulocheque",
-      author_email='paulocheque@gmail.com',
+      url='https://github.com/AMongeMoreno/%s' % PROJECT_NAME,
+      author="aMonge",
+      author_email='andres.monmor@gmail.com',
       keywords='python tornado rest handler',
       description='A simple Python Tornado handler that manage Rest requests automatically.',
       license='MIT',
       classifiers=[
-          # 'Framework :: Tornado',
+          'Framework :: Tornado',
           'Operating System :: OS Independent',
           'Topic :: Software Development'
       ],
